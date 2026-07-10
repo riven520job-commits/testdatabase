@@ -21,7 +21,7 @@ function createDefaultQuestion(): StudyQuestion {
     type: "single_choice",
     question: "",
     questionTranslation: "",
-    options: ["A", "B", "C", "D"].map((id) => ({ id, text: "" })),
+    options: ["A", "B", "C", "D"].map((id) => ({ id, text: "", translation: "" })),
     correctAnswers: ["A"],
     explanation: "",
     category: "",
@@ -41,23 +41,27 @@ export function QuestionFormPage({ editingQuestion, categories, onSave, onCancel
   const [draft, setDraft] = React.useState<StudyQuestion>(() => editingQuestion ?? createDefaultQuestion());
   const [tagInput, setTagInput] = React.useState(() => (editingQuestion?.tags ?? []).join(", "));
   const [wantsTranslation, setWantsTranslation] = React.useState(() => Boolean(editingQuestion?.questionTranslation));
+  const [wantsOptionTranslations, setWantsOptionTranslations] = React.useState(() =>
+    Boolean(editingQuestion?.options.some((option) => option.translation?.trim()))
+  );
   const [error, setError] = React.useState("");
 
   React.useEffect(() => {
     setDraft(editingQuestion ?? createDefaultQuestion());
     setTagInput((editingQuestion?.tags ?? []).join(", "));
     setWantsTranslation(Boolean(editingQuestion?.questionTranslation));
+    setWantsOptionTranslations(Boolean(editingQuestion?.options.some((option) => option.translation?.trim())));
     setError("");
   }, [editingQuestion]);
 
-  function updateOption(index: number, text: string) {
-    const options = draft.options.map((option, optionIndex) => (optionIndex === index ? { ...option, text } : option));
+  function updateOption(index: number, field: "text" | "translation", value: string) {
+    const options = draft.options.map((option, optionIndex) => (optionIndex === index ? { ...option, [field]: value } : option));
     setDraft({ ...draft, options });
   }
 
   function addOption() {
     const nextId = optionIds.find((id) => !draft.options.some((option) => option.id === id)) ?? crypto.randomUUID();
-    setDraft({ ...draft, options: [...draft.options, { id: nextId, text: "" }] });
+    setDraft({ ...draft, options: [...draft.options, { id: nextId, text: "", translation: "" }] });
   }
 
   function removeOption(optionId: string) {
@@ -88,7 +92,11 @@ export function QuestionFormPage({ editingQuestion, categories, onSave, onCancel
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const cleanOptions = draft.options.map((option) => ({ ...option, text: option.text.trim() }));
+    const cleanOptions = draft.options.map((option) => ({
+      ...option,
+      text: option.text.trim(),
+      translation: wantsOptionTranslations ? option.translation?.trim() || undefined : undefined
+    }));
     const tags = tagInput
       .split(",")
       .map((tag) => tag.trim())
@@ -208,14 +216,18 @@ export function QuestionFormPage({ editingQuestion, categories, onSave, onCancel
           </div>
 
           <section className="rounded-2xl border border-notion-border bg-[#fbfbfa] p-3 sm:p-4">
-            <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-notion-text">選項與正確答案</h2>
-                <p className="mt-1 text-xs text-notion-muted">左側勾選代表正確答案。</p>
+                <p className="mt-1 text-xs text-notion-muted">左側勾選代表正確答案；可選擇是否替每個選項加入翻譯。</p>
               </div>
-              <button type="button" className="btn" onClick={addOption}>
-                新增選項
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <label className="flex min-h-11 items-center gap-2 rounded-xl border border-notion-border bg-white px-3 text-sm text-notion-text">
+                  <input type="checkbox" checked={wantsOptionTranslations} onChange={(event) => setWantsOptionTranslations(event.target.checked)} />
+                  選項翻譯
+                </label>
+                <button type="button" className="btn" onClick={addOption}>新增選項</button>
+              </div>
             </div>
             <div className="space-y-3">
               {draft.options.map((option, index) => (
@@ -229,7 +241,15 @@ export function QuestionFormPage({ editingQuestion, categories, onSave, onCancel
                     />
                     {option.id}
                   </label>
-                  <input className="form-input" value={option.text} onChange={(event) => updateOption(index, event.target.value)} />
+                  <div className="grid gap-2">
+                    <input className="form-input" value={option.text} onChange={(event) => updateOption(index, "text", event.target.value)} placeholder={`${option.id} 選項原文`} />
+                    {wantsOptionTranslations ? (
+                      <div className="relative">
+                        <Languages className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-notion-muted" size={16} />
+                        <input className="form-input pl-10" value={option.translation ?? ""} onChange={(event) => updateOption(index, "translation", event.target.value)} placeholder={`${option.id} 繁體中文翻譯（選填）`} />
+                      </div>
+                    ) : null}
+                  </div>
                   <button
                     type="button"
                     className="btn text-red-700 hover:bg-red-50"

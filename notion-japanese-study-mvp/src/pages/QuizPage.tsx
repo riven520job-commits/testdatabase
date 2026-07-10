@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, CheckCircle2, Eye, EyeOff, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Eye, EyeOff, Languages, XCircle } from "lucide-react";
 import { Badge } from "../components/Badge";
 import { EmptyState } from "../components/EmptyState";
 import { PageHeader } from "../components/PageHeader";
@@ -17,11 +17,13 @@ export function QuizPage({ question, onBack, onComplete }: QuizPageProps) {
   const [selectedAnswers, setSelectedAnswers] = React.useState<string[]>([]);
   const [submitted, setSubmitted] = React.useState(false);
   const [showOriginal, setShowOriginal] = React.useState(true);
+  const [showOptionTranslations, setShowOptionTranslations] = React.useState(false);
 
   React.useEffect(() => {
     setSelectedAnswers([]);
     setSubmitted(false);
     setShowOriginal(!question?.questionTranslation);
+    setShowOptionTranslations(false);
   }, [question?.id]);
 
   if (!question) {
@@ -38,6 +40,13 @@ export function QuizPage({ question, onBack, onComplete }: QuizPageProps) {
   const displayedQuestion =
     hasTranslation && !showOriginal ? currentQuestion.questionTranslation ?? currentQuestion.question : currentQuestion.question;
   const wasCorrect = submitted ? isAnswerCorrect(currentQuestion, selectedAnswers) : false;
+  const hasOptionTranslations = currentQuestion.options.some((option) => option.translation?.trim());
+  const answerDetails = (answerIds: string[]) =>
+    answerIds.map((answerId) => {
+      const option = currentQuestion.options.find((item) => item.id === answerId);
+      if (!option) return answerId;
+      return `${answerId}：${option.text}${option.translation ? `（${option.translation}）` : ""}`;
+    });
 
   function choose(optionId: string, checked: boolean) {
     if (currentQuestion.type === "single_choice") {
@@ -74,12 +83,18 @@ export function QuizPage({ question, onBack, onComplete }: QuizPageProps) {
             <Badge tone="warm">{currentQuestion.level}</Badge>
             <Badge>{currentQuestion.category}</Badge>
           </div>
-          {hasTranslation ? (
-            <button className="btn" onClick={() => setShowOriginal(!showOriginal)}>
-              {showOriginal ? <EyeOff size={16} /> : <Eye size={16} />}
-              {showOriginal ? "隱藏原文" : "顯示原文"}
-            </button>
-          ) : null}
+          <div className="flex flex-wrap gap-2">
+            {hasTranslation ? (
+              <button className="btn" onClick={() => setShowOriginal(!showOriginal)}>
+                {showOriginal ? <EyeOff size={16} /> : <Eye size={16} />}{showOriginal ? "隱藏原文" : "顯示原文"}
+              </button>
+            ) : null}
+            {hasOptionTranslations ? (
+              <button className="btn" onClick={() => setShowOptionTranslations(!showOptionTranslations)}>
+                <Languages size={16} />{showOptionTranslations ? "隱藏選項翻譯" : "顯示選項翻譯"}
+              </button>
+            ) : null}
+          </div>
         </div>
 
         <div className="rounded-2xl border border-notion-border bg-[#fbfbfa] p-4">
@@ -111,7 +126,10 @@ export function QuizPage({ question, onBack, onComplete }: QuizPageProps) {
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-notion-soft text-xs font-semibold text-notion-text">
                 {option.id}
               </span>
-              <span className="text-sm leading-6 text-notion-text">{option.text}</span>
+              <span className="text-sm leading-6 text-notion-text">
+                <span className="block">{option.text}</span>
+                {showOptionTranslations && option.translation ? <span className="mt-1 block text-notion-muted">{option.translation}</span> : null}
+              </span>
             </label>
           ))}
         </div>
@@ -127,8 +145,8 @@ export function QuizPage({ question, onBack, onComplete }: QuizPageProps) {
               {wasCorrect ? "答對了" : "答錯了"}
             </div>
             <div className="grid gap-3 text-sm leading-6 text-notion-text">
-              <p>正確答案：{currentQuestion.correctAnswers.join(", ")}</p>
-              <p>你的答案：{selectedAnswers.length ? selectedAnswers.join(", ") : "未作答"}</p>
+              <p>正確答案：{answerDetails(currentQuestion.correctAnswers).join("、")}</p>
+              <p>你的答案：{selectedAnswers.length ? answerDetails(selectedAnswers).join("、") : "未作答"}</p>
               {hasTranslation ? <p>題目原文：{currentQuestion.question}</p> : null}
               <p className="rounded-xl bg-white p-4 text-notion-muted">{currentQuestion.explanation || "尚未填寫解析。"}</p>
             </div>

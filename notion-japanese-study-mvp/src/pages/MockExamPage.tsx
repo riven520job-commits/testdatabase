@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ArrowLeft, CheckCircle2, ChevronRight, ClipboardCheck, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronRight, ClipboardCheck, Languages, XCircle } from "lucide-react";
 import { Badge } from "../components/Badge";
 import { EmptyState } from "../components/EmptyState";
 import { PageHeader } from "../components/PageHeader";
@@ -23,6 +23,7 @@ export function MockExamPage({ questions, onExit, onComplete }: MockExamPageProp
   const [selectedAnswers, setSelectedAnswers] = React.useState<string[]>([]);
   const [results, setResults] = React.useState<MockExamResult[]>([]);
   const [finished, setFinished] = React.useState(false);
+  const [showOptionTranslations, setShowOptionTranslations] = React.useState(false);
   const question = questions[index];
 
   if (!question) {
@@ -31,6 +32,12 @@ export function MockExamPage({ questions, onExit, onComplete }: MockExamPageProp
 
   const score = results.filter((result) => result.correct).length;
   const percentage = results.length ? Math.round((score / results.length) * 100) : 0;
+  const answerDetails = (targetQuestion: StudyQuestion, answerIds: string[]) =>
+    answerIds.map((answerId) => {
+      const option = targetQuestion.options.find((item) => item.id === answerId);
+      if (!option) return answerId;
+      return `${answerId}：${option.text}${option.translation ? `（${option.translation}）` : ""}`;
+    });
 
   function choose(optionId: string, checked: boolean) {
     if (question.type === "single_choice") {
@@ -73,8 +80,8 @@ export function MockExamPage({ questions, onExit, onComplete }: MockExamPageProp
                   <span className="min-w-0 flex-1 text-sm font-medium leading-6 text-notion-text">{resultIndex + 1}. {result.question.question}</span>
                 </summary>
                 <div className="mt-4 border-t border-notion-border pt-4 text-sm leading-6 text-notion-muted">
-                  <p>你的答案：{result.selectedAnswers.join(", ") || "未作答"}</p>
-                  <p>正確答案：{result.question.correctAnswers.join(", ")}</p>
+                  <p>你的答案：{answerDetails(result.question, result.selectedAnswers).join("、") || "未作答"}</p>
+                  <p>正確答案：{answerDetails(result.question, result.question.correctAnswers).join("、")}</p>
                   <p className="mt-2 rounded-xl bg-notion-soft p-3">{result.question.explanation || "尚未填寫解析。"}</p>
                 </div>
               </details>
@@ -102,6 +109,11 @@ export function MockExamPage({ questions, onExit, onComplete }: MockExamPageProp
       <section className="card p-4 sm:p-6">
         <div className="mb-5 flex flex-wrap gap-2">
           <Badge tone="blue">{readableQuestionType(question.type)}</Badge><Badge tone="warm">{question.level}</Badge><Badge>{question.category}</Badge>
+          {question.options.some((option) => option.translation?.trim()) ? (
+            <button className="btn ml-auto" onClick={() => setShowOptionTranslations(!showOptionTranslations)}>
+              <Languages size={16} />{showOptionTranslations ? "隱藏選項翻譯" : "顯示選項翻譯"}
+            </button>
+          ) : null}
         </div>
         <h2 className="rounded-2xl bg-[#fbfbfa] p-4 text-lg font-semibold leading-8 text-notion-text sm:p-5 sm:text-xl">{question.question}</h2>
         {question.questionTranslation ? <p className="mt-3 text-sm leading-6 text-notion-muted">翻譯：{question.questionTranslation}</p> : null}
@@ -112,7 +124,10 @@ export function MockExamPage({ questions, onExit, onComplete }: MockExamPageProp
               <label key={option.id} className={`flex min-h-16 cursor-pointer items-start gap-3 rounded-2xl border p-4 transition ${selected ? "border-stone-700 bg-stone-50 ring-1 ring-stone-700" : "border-notion-border bg-white hover:border-stone-300 hover:bg-notion-soft"}`}>
                 <input className="mt-1" type={question.type === "single_choice" ? "radio" : "checkbox"} name="exam-answer" checked={selected} onChange={(event) => choose(option.id, event.target.checked)} />
                 <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${selected ? "bg-stone-800 text-white" : "bg-notion-soft text-notion-text"}`}>{option.id}</span>
-                <span className="pt-0.5 text-sm leading-6 text-notion-text">{option.text}</span>
+                <span className="pt-0.5 text-sm leading-6 text-notion-text">
+                  <span className="block">{option.text}</span>
+                  {showOptionTranslations && option.translation ? <span className="mt-1 block text-notion-muted">{option.translation}</span> : null}
+                </span>
               </label>
             );
           })}

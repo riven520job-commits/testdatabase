@@ -87,7 +87,11 @@ export const sampleQuestions: StudyQuestion[] = [
 function isOption(value: unknown): value is Option {
   if (typeof value !== "object" || value === null) return false;
   const option = value as Record<string, unknown>;
-  return typeof option.id === "string" && typeof option.text === "string";
+  return (
+    typeof option.id === "string" &&
+    typeof option.text === "string" &&
+    (option.translation === undefined || typeof option.translation === "string")
+  );
 }
 
 export function isStudyQuestion(value: unknown): value is StudyQuestion {

@@ -3,6 +3,7 @@ export type QuestionType = "single_choice" | "multiple_choice" | "short_answer" 
 export type Option = {
   id: string;
   text: string;
+  translation?: string;
 };
 
 export type StudyQuestion = {
