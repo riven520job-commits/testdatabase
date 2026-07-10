@@ -53,7 +53,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
           <ClipboardList size={15} />
           Local first
         </div>
-        資料會保存在瀏覽器 localStorage，匯出 JSON 後更安心。
+        題庫會保存在此裝置；登入後可與手機或電腦雙向同步。
       </div>
     </aside>
   );

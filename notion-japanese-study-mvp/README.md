@@ -25,7 +25,9 @@ npm run build
 - 錯題本
 - 今日複習與簡單間隔複習
 - 匯出、匯入 JSON
-- localStorage 儲存，無需後端
+- localStorage 離線儲存
+- Supabase Email 登入與手機／電腦雙向題庫同步
+- 雲端下載、本機上傳，以及依每題 `updatedAt` 保留較新版本的合併同步
 
 ## 主要檔案
 
@@ -42,6 +44,6 @@ npm run build
 
 此專案可部署到 GitHub Pages 或 Netlify。`vite.config.ts` 已使用 `base: "./"`，靜態部署較不容易遇到路徑問題。
 
-## 未來改成 Supabase
+## Supabase 同步
 
-建議先從 `src/utils/storage.ts` 開始，把 `loadQuestions`、`saveQuestions`、`clearQuestions` 換成 Supabase CRUD。接著調整 `src/App.tsx` 的 `persist`、`saveQuestion`、`deleteQuestion`、`importQuestions`，讓它們改為 async 呼叫遠端資料。`types/question.ts`、`quiz.ts`、`review.ts` 大多可以保留。
+前端使用 Supabase publishable key，資料存放於 `japanese_study_sync`。該表已啟用 RLS，只有登入者能讀寫 `user_id = auth.uid()` 的資料；`manifestation_sync` 等既有資料表不在此功能的讀寫範圍內。
