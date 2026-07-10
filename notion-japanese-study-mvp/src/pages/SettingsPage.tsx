@@ -21,7 +21,8 @@ type SettingsPageProps = {
 };
 
 export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps) {
-  const [message, setMessage] = React.useState("");
+  const [cloudMessage, setCloudMessage] = React.useState("");
+  const [localMessage, setLocalMessage] = React.useState("");
   const [user, setUser] = React.useState<User | null>(null);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -33,11 +34,18 @@ export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps
 
   async function runCloudAction(action: () => Promise<void>) {
     setBusy(true);
-    setMessage("");
+    setCloudMessage("");
     try {
       await action();
     } catch (error) {
-      setMessage(`操作失敗：${error instanceof Error ? error.message : "未知錯誤"}`);
+      const rawMessage = error instanceof Error ? error.message : "未知錯誤";
+      let friendlyMessage = rawMessage;
+      if (rawMessage.toLowerCase().includes("invalid login credentials")) {
+        friendlyMessage = "帳號尚未建立、尚未完成 Email 驗證，或密碼不正確。";
+      } else if (rawMessage.toLowerCase().includes("email address") && rawMessage.toLowerCase().includes("invalid")) {
+        friendlyMessage = "Supabase 判定這個 Email 無效，請檢查拼字，或改用另一個可收信的 Email。";
+      }
+      setCloudMessage(`操作失敗：${friendlyMessage}`);
     } finally {
       setBusy(false);
     }
@@ -48,7 +56,7 @@ export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps
       const nextUser = await signInToCloud(email.trim(), password);
       setUser(nextUser);
       setPassword("");
-      setMessage("已登入雲端題庫。");
+      setCloudMessage("已登入雲端題庫。");
     });
   }
 
@@ -57,10 +65,10 @@ export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps
       const result = await signUpForCloud(email.trim(), password);
       setPassword("");
       if (result.needsConfirmation) {
-        setMessage("帳號已建立，請先到信箱完成驗證，再回來登入。");
+        setCloudMessage("帳號已建立，請先到信箱完成驗證，再回來登入。");
       } else {
         setUser(result.user);
-        setMessage("帳號已建立並登入。");
+        setCloudMessage("帳號已建立並登入。");
       }
     });
   }
@@ -69,14 +77,14 @@ export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps
     void runCloudAction(async () => {
       await signOutFromCloud();
       setUser(null);
-      setMessage("已登出；本機題庫仍保留在此裝置。");
+      setCloudMessage("已登出；本機題庫仍保留在此裝置。");
     });
   }
 
   function uploadCloud() {
     void runCloudAction(async () => {
       await uploadQuestionsToCloud(questions);
-      setMessage(`已將本機 ${questions.length} 題上傳並覆蓋雲端題庫。`);
+      setCloudMessage(`已將本機 ${questions.length} 題上傳並覆蓋雲端題庫。`);
     });
   }
 
@@ -84,11 +92,11 @@ export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps
     void runCloudAction(async () => {
       const cloud = await downloadQuestionsFromCloud();
       if (!cloud) {
-        setMessage("雲端尚無題庫；請先從任一裝置上傳。");
+        setCloudMessage("雲端尚無題庫；請先從任一裝置上傳。");
         return;
       }
       onImport(cloud.questions);
-      setMessage(`已從雲端下載 ${cloud.questions.length} 題並覆蓋本機題庫。`);
+      setCloudMessage(`已從雲端下載 ${cloud.questions.length} 題並覆蓋本機題庫。`);
     });
   }
 
@@ -96,7 +104,7 @@ export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps
     void runCloudAction(async () => {
       const result = await mergeWithCloud(questions);
       onImport(result.questions);
-      setMessage(`同步完成，共 ${result.questions.length} 題；同一題保留 updatedAt 較新的版本。`);
+      setCloudMessage(`同步完成，共 ${result.questions.length} 題；同一題保留 updatedAt 較新的版本。`);
     });
   }
 
@@ -108,7 +116,7 @@ export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps
     link.download = `japanese-study-questions-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
-    setMessage("已匯出 JSON。");
+    setLocalMessage("已匯出 JSON。");
   }
 
   async function importJson(file: File | undefined) {
@@ -118,20 +126,20 @@ export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps
       const parsed = JSON.parse(await file.text()) as unknown;
       const validQuestions = validateQuestions(parsed);
       if (!validQuestions) {
-        setMessage("匯入失敗：JSON 格式不是 StudyQuestion[]。");
+        setLocalMessage("匯入失敗：JSON 格式不是 StudyQuestion[]。");
         return;
       }
       onImport(validQuestions);
-      setMessage(`已匯入 ${validQuestions.length} 題。`);
+      setLocalMessage(`已匯入 ${validQuestions.length} 題。`);
     } catch {
-      setMessage("匯入失敗：無法解析 JSON。");
+      setLocalMessage("匯入失敗：無法解析 JSON。");
     }
   }
 
   function clearAll() {
     if (confirm("確定要清除全部題目嗎？這個動作無法復原。")) {
       onClear();
-      setMessage("已清除全部資料。");
+      setLocalMessage("已清除全部資料。");
     }
   }
 
@@ -191,6 +199,12 @@ export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps
             </button>
           </div>
         )}
+
+        {cloudMessage ? (
+          <p role="status" aria-live="polite" className="mt-4 rounded-xl bg-notion-soft px-4 py-3 text-sm font-medium text-notion-text">
+            {cloudMessage}
+          </p>
+        ) : null}
       </section>
 
       <section className="card p-5">
@@ -215,7 +229,7 @@ export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps
           </button>
         </div>
 
-        {message ? <p className="mt-4 rounded-xl bg-notion-soft px-4 py-3 text-sm text-notion-muted">{message}</p> : null}
+        {localMessage ? <p className="mt-4 rounded-xl bg-notion-soft px-4 py-3 text-sm text-notion-muted">{localMessage}</p> : null}
       </section>
     </>
   );
