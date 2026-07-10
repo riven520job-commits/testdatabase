@@ -28,7 +28,7 @@ npm run build
 - 匯出、匯入 JSON
 - localStorage 離線儲存
 - Supabase Email 登入與手機／電腦雙向題庫同步
-- 雲端下載、本機上傳，以及依每題 `updatedAt` 保留較新版本的合併同步
+- 依每題 `updatedAt` 保留較新版本的安全合併同步
 
 ## 主要檔案
 

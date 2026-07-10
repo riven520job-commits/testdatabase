@@ -1,16 +1,14 @@
 import * as React from "react";
 import type { User } from "@supabase/supabase-js";
-import { CloudDownload, CloudUpload, Download, LogIn, LogOut, RefreshCw, Trash2, Upload, UserPlus } from "lucide-react";
+import { Download, LogIn, LogOut, RefreshCw, ShieldCheck, Trash2, Upload, UserPlus } from "lucide-react";
 import { PageHeader } from "../components/PageHeader";
 import type { StudyQuestion } from "../types/question";
 import {
-  downloadQuestionsFromCloud,
   getCloudUser,
   mergeWithCloud,
   signInToCloud,
   signOutFromCloud,
-  signUpForCloud,
-  uploadQuestionsToCloud
+  signUpForCloud
 } from "../utils/cloudSync";
 import { validateQuestions } from "../utils/storage";
 
@@ -81,25 +79,6 @@ export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps
     });
   }
 
-  function uploadCloud() {
-    void runCloudAction(async () => {
-      await uploadQuestionsToCloud(questions);
-      setCloudMessage(`已將本機 ${questions.length} 題上傳並覆蓋雲端題庫。`);
-    });
-  }
-
-  function downloadCloud() {
-    void runCloudAction(async () => {
-      const cloud = await downloadQuestionsFromCloud();
-      if (!cloud) {
-        setCloudMessage("雲端尚無題庫；請先從任一裝置上傳。");
-        return;
-      }
-      onImport(cloud.questions);
-      setCloudMessage(`已從雲端下載 ${cloud.questions.length} 題並覆蓋本機題庫。`);
-    });
-  }
-
   function syncCloud() {
     void runCloudAction(async () => {
       const result = await mergeWithCloud(questions);
@@ -166,20 +145,16 @@ export function SettingsPage({ questions, onImport, onClear }: SettingsPageProps
               <div className="text-notion-muted">目前登入帳號</div>
               <div className="mt-1 font-medium text-notion-text">{user.email}</div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <button className="btn btn-primary" disabled={busy} onClick={syncCloud}>
+            <div className="grid gap-4 rounded-2xl border border-notion-border bg-[#fbfbfa] p-4 sm:grid-cols-[minmax(0,1fr)_minmax(220px,0.65fr)] sm:items-center sm:p-5">
+              <button className="btn btn-primary min-h-12 w-full" disabled={busy} onClick={syncCloud}>
                 <RefreshCw size={16} /> 合併同步
               </button>
-              <button className="btn" disabled={busy} onClick={downloadCloud}>
-                <CloudDownload size={16} /> 下載雲端覆蓋本機
-              </button>
-              <button className="btn" disabled={busy} onClick={uploadCloud}>
-                <CloudUpload size={16} /> 上傳本機覆蓋雲端
-              </button>
+              <div className="flex items-start gap-2 text-xs leading-5 text-notion-muted">
+                <ShieldCheck className="mt-0.5 shrink-0 text-emerald-700" size={17} />
+                <span>自動比較同一題的更新時間，保留較新的版本後同步到所有裝置。</span>
+              </div>
             </div>
-            <p className="mt-3 text-xs leading-5 text-notion-muted">
-              建議平常使用「合併同步」。只有確認其中一端資料為準時，才使用覆蓋功能。
-            </p>
+            <p className="mt-3 text-xs leading-5 text-notion-muted">為避免誤覆蓋資料，雲端同步只提供安全合併模式。</p>
           </>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">

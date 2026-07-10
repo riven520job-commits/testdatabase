@@ -1,7 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 import type { StudyQuestion } from "../types/question";
 import { validateQuestions } from "./storage";
-import { supabase } from "./supabase";
+import { APP_URL, supabase } from "./supabase";
 
 type CloudRow = {
   questions: unknown;
@@ -27,7 +27,11 @@ export async function signInToCloud(email: string, password: string): Promise<Us
 }
 
 export async function signUpForCloud(email: string, password: string): Promise<{ user: User; needsConfirmation: boolean }> {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: APP_URL }
+  });
   if (error) throw error;
   if (!data.user) throw new Error("無法建立帳號，請稍後再試。");
   return { user: data.user, needsConfirmation: !data.session };
