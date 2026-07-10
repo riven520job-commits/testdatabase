@@ -5,13 +5,15 @@ import { QuestionListPage } from "./pages/QuestionListPage";
 import { QuizPage } from "./pages/QuizPage";
 import { ReviewPage } from "./pages/ReviewPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { MockExamPage, type MockExamResult } from "./pages/MockExamPage";
+import { MockExamSetupPage } from "./pages/MockExamSetupPage";
 import { WrongQuestionsPage } from "./pages/WrongQuestionsPage";
 import { Layout } from "./components/Layout";
 import type { SelfRating, StudyQuestion } from "./types/question";
 import { applyReviewResult } from "./utils/review";
 import { clearQuestions, loadQuestions, saveQuestions } from "./utils/storage";
 
-export type Page = "dashboard" | "questions" | "form" | "quiz" | "review" | "wrong" | "settings";
+export type Page = "dashboard" | "questions" | "form" | "quiz" | "review" | "wrong" | "settings" | "mock-setup" | "mock-exam";
 
 export default function App() {
   const [questions, setQuestions] = React.useState<StudyQuestion[]>(() => loadQuestions());
@@ -19,6 +21,7 @@ export default function App() {
   const [editingQuestion, setEditingQuestion] = React.useState<StudyQuestion | null>(null);
   const [activeQuestion, setActiveQuestion] = React.useState<StudyQuestion | null>(null);
   const [returnPage, setReturnPage] = React.useState<Page>("questions");
+  const [mockExamQuestions, setMockExamQuestions] = React.useState<StudyQuestion[]>([]);
   const categories = React.useMemo(
     () => Array.from(new Set(questions.map((question) => question.category).filter(Boolean))).sort((a, b) => a.localeCompare(b)),
     [questions]
@@ -79,6 +82,21 @@ export default function App() {
     setQuestions([]);
   }
 
+  function startMockExam(selectedQuestions: StudyQuestion[]) {
+    setMockExamQuestions(selectedQuestions);
+    setPage("mock-exam");
+  }
+
+  function completeMockExam(results: MockExamResult[]) {
+    const resultMap = new Map(results.map((result) => [result.question.id, result]));
+    persist(
+      questions.map((question) => {
+        const result = resultMap.get(question.id);
+        return result ? applyReviewResult(question, result.correct ? "good" : "again", result.correct) : question;
+      })
+    );
+  }
+
   let content: React.ReactNode;
 
   if (page === "dashboard") {
@@ -111,6 +129,10 @@ export default function App() {
     content = <ReviewPage questions={questions} onStart={startQuiz} onEdit={editQuestion} />;
   } else if (page === "wrong") {
     content = <WrongQuestionsPage questions={questions} onStart={startQuiz} onEdit={editQuestion} />;
+  } else if (page === "mock-setup") {
+    content = <MockExamSetupPage questions={questions} onBack={() => setPage("dashboard")} onStart={startMockExam} />;
+  } else if (page === "mock-exam") {
+    content = <MockExamPage questions={mockExamQuestions} onExit={() => setPage("dashboard")} onComplete={completeMockExam} />;
   } else {
     content = <SettingsPage questions={questions} onImport={importQuestions} onClear={clearAll} />;
   }

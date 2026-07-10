@@ -1,4 +1,4 @@
-import { BookOpen, Layers, Plus, RotateCcw, Target, XCircle } from "lucide-react";
+import { ArrowRight, BookOpen, ClipboardCheck, Layers, Plus, RotateCcw, Sparkles, Target, XCircle } from "lucide-react";
 import type { Page } from "../App";
 import { Badge } from "../components/Badge";
 import { EmptyState } from "../components/EmptyState";
@@ -32,8 +32,8 @@ export function DashboardPage({ questions, onNavigate }: DashboardPageProps) {
   return (
     <>
       <PageHeader
-        title="Dashboard"
-        description="快速掌握今天要複習什麼，以及題庫目前的狀態。"
+        title="學習總覽"
+        description="掌握今天的複習進度，或開始一場自訂模擬考。"
         action={
           <button className="btn btn-primary hidden sm:inline-flex" onClick={() => onNavigate("form")}>
             <Plus size={16} />
@@ -41,6 +41,19 @@ export function DashboardPage({ questions, onNavigate }: DashboardPageProps) {
           </button>
         }
       />
+
+      <section className="mb-5 overflow-hidden rounded-3xl bg-stone-900 text-white shadow-[0_18px_50px_rgba(28,25,23,0.16)] sm:mb-6">
+        <div className="grid gap-6 px-5 py-6 sm:px-7 sm:py-8 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-stone-200"><Sparkles size={14} /> 自訂題庫與題數</div>
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">準備好測試今天的實力嗎？</h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-stone-300">選擇分類、JLPT 等級與作答題數，完成後一次查看成績與錯題解析。</p>
+          </div>
+          <button className="inline-flex min-h-12 items-center justify-center gap-3 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-stone-900 transition hover:bg-stone-100" onClick={() => onNavigate("mock-setup")}>
+            <ClipboardCheck size={19} /> 開始模擬考 <ArrowRight size={17} />
+          </button>
+        </div>
+      </section>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
         <StatCard label="總題目數" value={questions.length} hint="All" />
@@ -80,9 +93,13 @@ export function DashboardPage({ questions, onNavigate }: DashboardPageProps) {
             <Target size={18} className="text-notion-muted" />
           </div>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-            <button className="btn btn-primary w-full" onClick={() => onNavigate("form")}>
+            <button className="btn btn-primary w-full" onClick={() => onNavigate("form")}> 
               <Plus size={16} />
               新增題目
+            </button>
+            <button className="btn w-full" onClick={() => onNavigate("mock-setup")}>
+              <ClipboardCheck size={16} />
+              建立模擬考
             </button>
             <button className="btn w-full" onClick={() => onNavigate("review")}>
               <RotateCcw size={16} />

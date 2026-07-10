@@ -24,6 +24,7 @@ npm run build
 - 單選題與複選題測驗
 - 錯題本
 - 今日複習與簡單間隔複習
+- 可依分類、JLPT 等級與題數建立隨機模擬考，交卷後查看成績與解析
 - 匯出、匯入 JSON
 - localStorage 離線儲存
 - Supabase Email 登入與手機／電腦雙向題庫同步

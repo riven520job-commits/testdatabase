@@ -14,6 +14,12 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
+}
+
+::selection {
+  background: #d6d3d1;
+  color: #1c1917;
 }
 
 button,
@@ -40,7 +46,7 @@ textarea:focus-visible {
 }
 
 .btn {
-  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-notion-border px-3.5 py-2 text-sm font-medium transition hover:bg-notion-soft disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-notion-border bg-white px-3.5 py-2 text-sm font-medium shadow-sm transition hover:-translate-y-px hover:bg-notion-soft hover:shadow disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
 }
 
 .btn-primary {
@@ -48,5 +54,5 @@ textarea:focus-visible {
 }
 
 .card {
-  @apply rounded-2xl border border-notion-border bg-notion-card shadow-notion;
+  @apply rounded-2xl border border-notion-border bg-notion-card shadow-notion transition-shadow hover:shadow-[0_8px_30px_rgba(15,15,15,0.06)];
 }

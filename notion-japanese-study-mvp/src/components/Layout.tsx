@@ -9,11 +9,13 @@ type LayoutProps = {
 };
 
 export function Layout({ currentPage, onNavigate, children }: LayoutProps) {
+  const immersive = currentPage === "mock-exam";
+
   return (
     <div className="min-h-screen bg-notion-bg text-notion-text">
-      <Sidebar currentPage={currentPage} onNavigate={onNavigate} />
-      <main className="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:px-6 lg:ml-64 lg:px-10 lg:py-10">{children}</main>
-      <MobileNav currentPage={currentPage} onNavigate={onNavigate} />
+      {immersive ? null : <Sidebar currentPage={currentPage} onNavigate={onNavigate} />}
+      <main className={`mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-10 lg:py-10 ${immersive ? "pb-10" : "pb-28 lg:ml-64"}`}>{children}</main>
+      {immersive ? null : <MobileNav currentPage={currentPage} onNavigate={onNavigate} />}
     </div>
   );
 }
@@ -24,7 +26,7 @@ function MobileNav({ currentPage, onNavigate }: SidebarProps) {
       <div className="mx-auto grid max-w-lg grid-cols-6 gap-1">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const active = currentPage === item.page || (currentPage === "quiz" && item.page === "questions");
+          const active = currentPage === item.page || (currentPage === "quiz" && item.page === "questions") || ((currentPage === "mock-setup" || currentPage === "mock-exam") && item.page === "dashboard");
           return (
             <button
               key={item.page}
