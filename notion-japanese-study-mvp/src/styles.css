@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #30302e;
+  background: #f7f7f5;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #9b9a93;
+  outline-offset: 2px;
+}
+
+.form-label {
+  @apply text-sm font-medium text-notion-text;
+}
+
+.form-input {
+  @apply w-full rounded-xl border border-notion-border bg-white px-3 py-3 text-base text-notion-text shadow-sm transition placeholder:text-notion-muted/60 focus:border-stone-400 sm:py-2.5 sm:text-sm;
+}
+
+.btn {
+  @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-notion-border px-3.5 py-2 text-sm font-medium transition hover:bg-notion-soft disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.btn-primary {
+  @apply border-stone-800 bg-stone-800 text-white hover:bg-stone-700;
+}
+
+.card {
+  @apply rounded-2xl border border-notion-border bg-notion-card shadow-notion;
+}
